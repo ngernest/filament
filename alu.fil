@@ -1,0 +1,25 @@
+import "primitives/core.fil";
+import "examples/sequential.fil";
+
+comp main<'G: 3>(
+    go: interface['G],
+    op: ['G, 'G+3] 1,
+    left: ['G, 'G+1] 32,
+    right: ['G, 'G+1] 32,
+) -> (out: ['G+2, 'G+3] 32) 
+{
+    // Define two circuits to represent 32-bit adders & multipliers
+    A := new Add[32];
+    M := new Mult[32];
+
+    // Create two invocations of the adder & multiplier when the event G occurs
+    m0 := M<'G>(left, right);
+    a0 := A<'G>(left, right);
+
+    // Use a register to hold the adder's value
+    r0 := new Register[32]<'G, 'G+3>(a0.out);
+
+    // Use the multiplexer when the mult's output is ready
+    mx := new Mux[32]<'G+2>(op, r0.out, m0.out);
+    out = mx.out;
+}
